@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 
 public class Node {
+
     private static final String MULTICAST_ADDRESS = "230.0.0.0"; // Endereço Multicast
     private static final int PORT = 8888; // Porta Multicast
 
@@ -22,39 +23,19 @@ public class Node {
 
     public void start() {
         if (isLeader) {
-            sendHeartbeats();
+            SendTransmitter transmitter = new SendTransmitter(MULTICAST_ADDRESS, PORT, MESSAGES);
+            transmitter.start();
         } else {
-            listenForHeartbeats();
+            ListenTransmitter listener = new ListenTransmitter(MULTICAST_ADDRESS, PORT);
+            listener.start();
         }
     }
 
-    private void sendHeartbeats() {
-        Thread sendThread = new Thread(() -> {
-            try (MulticastSocket socket = new MulticastSocket()) {
-                InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
-
-                while (true) {
-                    for (String message : MESSAGES) {
-                        byte[] buffer = message.getBytes();
-                        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
-                        socket.send(packet);
-                        System.out.println("Mensagem enviada: " + message);
-
-                        // Espera 5 segundos antes de enviar a próxima mensagem
-                        Thread.sleep(5000);
-                    }
-                }
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
-        sendThread.start();
-    }
 
     // Ouve mensagens de heartbeat se for um membro
     private void listenForHeartbeats() {
         Thread receiveThread = new Thread(() -> {
-            try (MulticastSocket socket = new MulticastSocket(PORT)) {
+            try (MulticastSocket socket = new MulticastSocket(8888)) {
                 InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
                 socket.joinGroup(group); // Junta-se ao grupo multicast
 
