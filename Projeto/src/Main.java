@@ -1,6 +1,5 @@
 public class Main {
-
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
         //Não Líder
         Node memberNode1 = new Node(false);
         memberNode1.start();
@@ -9,9 +8,7 @@ public class Main {
         //Esperar 1 segundo para os elementos começarem antes do lider
         Thread.sleep(1000);
         // Lider
-        Node node = new Node(true);
-        node.start();
+        LeaderNode leaderNode = new LeaderNode();
+        leaderNode.start();
     }
-
-
 }

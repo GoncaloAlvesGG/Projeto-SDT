@@ -7,8 +7,9 @@ public class SendTransmitter extends Thread {
     private final String multicastAddress;
     private final int port;
     private final String[] messages;
+    private Node node;
 
-    public SendTransmitter(String multicastAddress, int port, String[] messages) {
+    public SendTransmitter(String multicastAddress, int port, String[] messages, Node node) {
         this.multicastAddress = multicastAddress;
         this.port = port;
         this.messages = messages;
