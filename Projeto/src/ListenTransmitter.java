@@ -1,4 +1,6 @@
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -9,12 +11,16 @@ import java.rmi.RemoteException;
 public class ListenTransmitter extends Thread {
     private final String multicastAddress;
     private final int port;
-    private final Node node;
+    private final Client node;
+    private FileManager fileManager;
+    private File tempFile;
 
-    public ListenTransmitter(String multicastAddress, int port, Node node) {
+    public ListenTransmitter(String multicastAddress, int port, Client node) {
         this.multicastAddress = multicastAddress;
         this.port = port;
+        this.fileManager =  new FileManager();
         this.node = node;
+
     }
 
     public void run() {
@@ -27,11 +33,12 @@ public class ListenTransmitter extends Thread {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
 
-                String receivedMessage = new String(packet.getData(), 0, packet.getLength());
-                System.out.println("Mensagem recebida: " + receivedMessage);
-                if (!receivedMessage.equals("COMMIT")) {
-                    String uuid = java.util.UUID.randomUUID().toString();
+                Message receivedMessage = deserializeMessage(packet.getData(), packet.getLength());
+                System.out.println("Mensagem recebida: " + receivedMessage.getType());
 
+                if(receivedMessage.getType().equals("FILE")) {
+                    tempFile = receivedMessage.getFile();
+                    String uuid = java.util.UUID.randomUUID().toString();
                     try {
                         LeaderInterface leader = (LeaderInterface) Naming.lookup("rmi://localhost/Leader");
                         leader.sendAck(uuid);
@@ -39,12 +46,24 @@ public class ListenTransmitter extends Thread {
                     } catch (NotBoundException | RemoteException e) {
                         e.printStackTrace();
                     }
-                } else {
-                    System.out.println("Commit recebido: Atualizando versão do documento.");
+
+                }
+                if (receivedMessage.getType().equals("COMMIT")) {
+                    System.out.println("Commit recebido: A atualizar versão do documento.");
+                    fileManager.saveFile(tempFile);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+    private Message deserializeMessage(byte[] data, int length) {
+        try (ByteArrayInputStream byteStream = new ByteArrayInputStream(data, 0, length);
+             ObjectInputStream objectStream = new ObjectInputStream(byteStream)) {
+            return (Message) objectStream.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }

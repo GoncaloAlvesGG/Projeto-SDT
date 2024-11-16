@@ -6,11 +6,12 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.HashSet;
 import java.util.Set;
 
-public class LeaderNode extends Node implements LeaderInterface, Serializable {
+public class Server extends Client implements LeaderInterface, Serializable {
     private final Set<String> receivedAcks = new HashSet<>();
+    private final MessageList messageList = new MessageList();
 
-    public LeaderNode() throws RemoteException {
-        super(true); // Define isLeader como true
+    public Server() throws RemoteException {
+        super( true); // Define isLeader como true
         UnicastRemoteObject.exportObject(this, 0);
         try {
             LocateRegistry.createRegistry(1099);
@@ -23,7 +24,12 @@ public class LeaderNode extends Node implements LeaderInterface, Serializable {
 
     @Override
     public void start() {
-        SendTransmitter transmitter = new SendTransmitter(MULTICAST_ADDRESS, PORT, new String[]{"Doc1 v2", "Doc2 v2"}, this);
+        messageList.addMessage(new Message("FILE", new File(1,"DOC 1","oLÁ")));
+        messageList.addMessage(new Message("FILE", new File(2,"DOC 1","Adeus")));
+        messageList.addMessage(new Message("FILE", new File(1,"DOC 3","Viva")));
+        messageList.addMessage(new Message("FILE", new File(2,"DOC 2","Adeus")));
+        messageList.addMessage(new Message("FILE", new File(3,"DOC 2","Adeus")));
+        SendTransmitter transmitter = new SendTransmitter(MULTICAST_ADDRESS, PORT, messageList);
         transmitter.start();
     }
 
@@ -31,10 +37,8 @@ public class LeaderNode extends Node implements LeaderInterface, Serializable {
     public void sendAck(String uuid) throws RemoteException {
         System.out.println("ACK recebido via RMI: " + uuid);
         receivedAcks.add(uuid);
-
-        // Verifica se a maioria enviou ACK
-        //TODO: Executar de forma dinâmica
-        if (receivedAcks.size() >= 2) { // Supondo maioria de 2 em um grupo de 3 membros
+        //TODO: DINAMICO
+        if (receivedAcks.size() >= 2) {
             sendCommit();
             receivedAcks.clear();
         }
@@ -42,7 +46,9 @@ public class LeaderNode extends Node implements LeaderInterface, Serializable {
 
     private void sendCommit() {
         System.out.println("Enviando commit para todos os membros...");
-        SendTransmitter transmitter = new SendTransmitter(MULTICAST_ADDRESS, PORT, new String[]{"COMMIT"}, this);
+        MessageList messageList = new MessageList();
+        messageList.addMessage(new Message("COMMIT"));
+        SendTransmitter transmitter = new SendTransmitter(MULTICAST_ADDRESS, PORT, messageList);
         transmitter.start();
     }
 
