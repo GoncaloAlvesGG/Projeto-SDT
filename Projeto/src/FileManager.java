@@ -45,4 +45,8 @@ public class FileManager {
     public synchronized List<File> listFiles() {
         return new ArrayList<>(fileStorage); // Retorna uma cópia
     }
+
+    public File getFile(String title) {
+        return null;
+    }
 }

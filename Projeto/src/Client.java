@@ -1,3 +1,9 @@
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.rmi.RemoteException;
 
 public class Client {
@@ -12,12 +18,46 @@ public class Client {
 
     }
 
+
+
     public void start() {
         if (isLeader) {
             System.out.println("Este nó é o líder. Inicie classe LeaderNode.");
         } else {
             ListenTransmitter listener = new ListenTransmitter(MULTICAST_ADDRESS, PORT, this);
             listener.start();
+            try {
+                Thread.sleep(2000); // Espera 2 segundos para o líder iniciar
+                Message setupMessage = new Message("SETUP");
+                sendMessage(setupMessage);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    private void sendMessage(Message message) {
+        try (MulticastSocket socket = new MulticastSocket()) {
+            InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
+            byte[] buffer = serializeMessage(message);
+
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
+            socket.send(packet);
+            System.out.println("Mensagem enviada: " + message.getType());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private byte[] serializeMessage(Message message) {
+        try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+             ObjectOutputStream objectStream = new ObjectOutputStream(byteStream)) {
+            objectStream.writeObject(message);
+
+            return byteStream.toByteArray();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new byte[0];
         }
     }
 }

@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.util.Arrays;
 
 public class File implements Serializable {
     private final int version;
@@ -9,6 +10,12 @@ public class File implements Serializable {
         this.version = version;
         this.title = title;
         this.content = content;
+    }
+
+    public File(String title, int version, byte[] fileContent) {
+        this.title = title;
+        this.version = version;
+        this.content = Arrays.toString(fileContent);
     }
 
     public int getVersion() {
