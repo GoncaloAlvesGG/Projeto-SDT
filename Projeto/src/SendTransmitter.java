@@ -10,7 +10,6 @@ public class SendTransmitter extends Thread {
     private final String multicastAddress;
     private final int port;
     private final MessageList messages;
-    private Element node;
 
     public SendTransmitter(String multicastAddress, int port, MessageList messageList) {
         this.multicastAddress = multicastAddress;
@@ -24,8 +23,10 @@ public class SendTransmitter extends Thread {
         List<Message> lista = messages.getMessages();
         while (!lista.isEmpty()) {
             sendMessage(lista.get(messageIndex));
-            messageIndex = (messageIndex + 1) % lista.size();
-
+            lista.remove(messageIndex);
+            if(lista.size() != 0) {
+                messageIndex = (messageIndex + 1) % lista.size();
+            }
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {

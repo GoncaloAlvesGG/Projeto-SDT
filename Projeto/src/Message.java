@@ -2,7 +2,7 @@ import java.io.Serializable;
 
 public class Message implements Serializable {
     private String type; // Tipo da mensagem, por exemplo, "file" ou "commit"
-    private File file; // Objeto File, se a mensagem for do tipo "file"
+    private Object file; // Objeto File, se a mensagem for do tipo "file"
 
     // Construtor para uma mensagem do tipo commit (sem arquivo)
     public Message(String type) {
@@ -11,7 +11,7 @@ public class Message implements Serializable {
     }
 
     // Construtor para uma mensagem do tipo file (com arquivo)
-    public Message(String type, File file) {
+    public Message(String type, Object file) {
         this.type = type;
         this.file = file;
     }
@@ -26,7 +26,7 @@ public class Message implements Serializable {
     }
 
     public File getFile() {
-        return file;
+        return (File) file;
     }
 
     public void setFile(File file) {
