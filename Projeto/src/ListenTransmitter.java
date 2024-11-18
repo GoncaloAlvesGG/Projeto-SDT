@@ -14,13 +14,13 @@ import java.util.List;
 public class ListenTransmitter extends Thread {
     private final String multicastAddress;
     private final int port;
-    private final Client node;
+    private final Element node;
     private FileManager fileManager;
     private File tempFile;
     private Queue<Message> mensagensPendentes = new LinkedList<>();
     private boolean sincronizacaoInicialCompleta = false;
 
-    public ListenTransmitter(String multicastAddress, int port, Client node) {
+    public ListenTransmitter(String multicastAddress, int port, Element node) {
         this.multicastAddress = multicastAddress;
         this.port = port;
         this.fileManager =  new FileManager();

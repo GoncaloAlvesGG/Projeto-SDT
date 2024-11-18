@@ -10,7 +10,7 @@ public class SendTransmitter extends Thread {
     private final String multicastAddress;
     private final int port;
     private final MessageList messages;
-    private Client node;
+    private Element node;
 
     public SendTransmitter(String multicastAddress, int port, MessageList messageList) {
         this.multicastAddress = multicastAddress;

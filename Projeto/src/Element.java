@@ -6,14 +6,14 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.rmi.RemoteException;
 
-public class Client {
+public class Element {
 
     protected static final String MULTICAST_ADDRESS = "230.0.0.0"; // Endereço Multicast
     protected static final int PORT = 8888; // Porta Multicast
 
     private final boolean isLeader;
 
-    public Client(boolean isLeader) throws RemoteException {
+    public Element(boolean isLeader) throws RemoteException {
         this.isLeader = isLeader;
 
     }

@@ -8,13 +8,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
 
-public class Server extends Client implements LeaderInterface, Serializable {
+public class ElementLider extends Element implements LeaderInterface, Serializable {
     private final Set<String> receivedAcks = new HashSet<>();
     private final MessageList messageList = new MessageList();
 
     private List<File> arquivos; // Lista para armazenar os arquivos
 
-    public Server() throws RemoteException {
+    public ElementLider() throws RemoteException {
         super( true); // Define isLeader como true
         UnicastRemoteObject.exportObject(this, 0);
         try {
