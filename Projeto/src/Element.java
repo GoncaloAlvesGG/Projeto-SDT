@@ -22,7 +22,6 @@ public class Element {
 
     public Element(boolean isLeader) throws RemoteException {
         this.isLeader = isLeader;
-
     }
 
     public void start() {
@@ -34,15 +33,16 @@ public class Element {
             try {
                 LeaderInterface leader = (LeaderInterface) Naming.lookup("rmi://localhost/Leader");
                 leader.sendSetup(randomUUIDString);
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            } catch (NotBoundException e) {
-                throw new RuntimeException(e);
-            } catch (RemoteException e) {
+            } catch (MalformedURLException | NotBoundException | RemoteException e) {
                 throw new RuntimeException(e);
             }
         }
     }
+
+    public String getUUID() {
+        return randomUUIDString;
+    }
+
     private void sendMessage(Message message) {
         try (MulticastSocket socket = new MulticastSocket()) {
             InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
@@ -60,9 +60,7 @@ public class Element {
         try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
              ObjectOutputStream objectStream = new ObjectOutputStream(byteStream)) {
             objectStream.writeObject(message);
-
             return byteStream.toByteArray();
-
         } catch (IOException e) {
             e.printStackTrace();
             return new byte[0];

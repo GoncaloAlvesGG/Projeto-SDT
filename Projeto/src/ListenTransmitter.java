@@ -7,9 +7,6 @@ import java.net.MulticastSocket;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.List;
 
 public class ListenTransmitter extends Thread {
     private final String multicastAddress;
@@ -21,9 +18,8 @@ public class ListenTransmitter extends Thread {
     public ListenTransmitter(String multicastAddress, int port, Element node) {
         this.multicastAddress = multicastAddress;
         this.port = port;
-        this.fileManager =  new FileManager();
+        this.fileManager = new FileManager();
         this.node = node;
-
     }
 
     public void run() {
@@ -39,7 +35,7 @@ public class ListenTransmitter extends Thread {
                 Message receivedMessage = deserializeMessage(packet.getData(), packet.getLength());
                 System.out.println("Mensagem recebida: " + receivedMessage.getType());
 
-                if(receivedMessage.getType().equals("FILE")) {
+                if (receivedMessage.getType().equals("FILE")) {
                     tempFile = receivedMessage.getFile();
                     String uuid = java.util.UUID.randomUUID().toString();
                     try {
@@ -49,24 +45,29 @@ public class ListenTransmitter extends Thread {
                     } catch (NotBoundException | RemoteException e) {
                         e.printStackTrace();
                     }
-
                 }
 
-                if(receivedMessage.getType().equals("HEARTBEAT")) {
+                if (receivedMessage.getType().equals("HEARTBEAT")) {
                     System.out.println("Recebi um heartbeat!");
+                    try {
+                        LeaderInterface leader = (LeaderInterface) Naming.lookup("rmi://localhost/Leader");
+                        leader.sendAck(node.getUUID());
+                        System.out.println("ACK enviado via RMI: " + node.getUUID());
+                    } catch (NotBoundException | RemoteException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 if (receivedMessage.getType().equals("COMMIT")) {
                     System.out.println("Commit recebido: A atualizar versão do documento.");
                     fileManager.saveFile(tempFile);
                 }
-
-
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
     private Message deserializeMessage(byte[] data, int length) {
         try (ByteArrayInputStream byteStream = new ByteArrayInputStream(data, 0, length);
              ObjectInputStream objectStream = new ObjectInputStream(byteStream)) {
