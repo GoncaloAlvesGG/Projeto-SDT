@@ -40,7 +40,7 @@ public class ListenTransmitter extends Thread {
                     String uuid = java.util.UUID.randomUUID().toString();
                     try {
                         LeaderInterface leader = (LeaderInterface) Naming.lookup("rmi://localhost/Leader");
-                        leader.sendAck(uuid, "FILE");
+                        leader.sendAck(uuid, "COMMIT");
                         System.out.println("ACK enviado via RMI: " + uuid);
                     } catch (NotBoundException | RemoteException e) {
                         e.printStackTrace();
@@ -60,12 +60,6 @@ public class ListenTransmitter extends Thread {
                 if (receivedMessage.getType().equals("COMMIT")) {
                     System.out.println("Commit recebido: A atualizar versão do documento.");
                     fileManager.saveFile(tempFile);
-                    try {
-                        LeaderInterface leader = (LeaderInterface) Naming.lookup("rmi://localhost/Leader");
-                        leader.sendAck(node.getUUID(), "COMMIT");
-                    } catch (NotBoundException | RemoteException e) {
-                        e.printStackTrace();
-                    }
                 }
             }
         } catch (IOException e) {
