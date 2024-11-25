@@ -42,7 +42,7 @@ public class SendTransmitter extends Thread {
 
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, port);
             socket.send(packet);
-            System.out.println("Mensagem enviada: " + message);
+            System.out.println("Mensagem enviada: " + message.getType());
         } catch (IOException e) {
             e.printStackTrace();
         }
