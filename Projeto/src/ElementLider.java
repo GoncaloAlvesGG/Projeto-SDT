@@ -70,13 +70,25 @@ public class ElementLider extends Element implements LeaderInterface, Serializab
     }
 
     @Override
-    public void sendAck(String uuid) throws RemoteException {
-        System.out.println("ACK recebido via RMI: " + uuid);
-        receivedAcks.add(uuid);
+    public void sendAck(String uuid, String messageType) throws RemoteException {
+        System.out.println("ACK recebido via RMI: " + uuid + " para mensagem do tipo: " + messageType);
         lastResponseTime.put(uuid, System.currentTimeMillis());
-        if (receivedAcks.size() > elementos.size() / 2) {
-            sendCommit();
-            receivedAcks.clear();
+
+        switch (messageType) {
+            case "HEARTBEAT":
+                // Lógica específica para HEARTBEAT
+                System.out.println("Heartbeat ACK recebido de " + uuid);
+                break;
+            case "COMMIT":
+                receivedAcks.add(uuid);
+                if (receivedAcks.size() > elementos.size() / 2) {
+                    sendCommit();
+                    receivedAcks.clear();
+                }
+                break;
+            // Adicione outros casos conforme necessário
+            default:
+                System.out.println("Tipo de mensagem desconhecido: " + messageType);
         }
     }
 
