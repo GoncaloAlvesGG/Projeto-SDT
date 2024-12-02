@@ -13,6 +13,9 @@ public class ElementLider extends Element implements LeaderInterface, Serializab
     private final Map<String, Long> lastResponseTime = new HashMap<>();
     private static final long TIMEOUT = 15000; // 15 seconds
 
+    // Map to store ACKs received for each message type
+    private final Map<String, Set<String>> ackMap = new HashMap<>();
+
     public ElementLider() throws RemoteException {
         super(true); // Define isLeader como true
         UnicastRemoteObject.exportObject(this, 0);
@@ -74,6 +77,9 @@ public class ElementLider extends Element implements LeaderInterface, Serializab
         System.out.println("ACK recebido via RMI: " + uuid + " para mensagem do tipo: " + messageType);
         lastResponseTime.put(uuid, System.currentTimeMillis());
 
+        // Store the ACK UUID in the ackMap
+        ackMap.computeIfAbsent(messageType, k -> new HashSet<>()).add(uuid);
+
         switch (messageType) {
             case "HEARTBEAT":
                 // Lógica específica para HEARTBEAT
@@ -116,5 +122,10 @@ public class ElementLider extends Element implements LeaderInterface, Serializab
         messageList.addMessage(new Message("COMMIT"));
         SendTransmitter transmitter = new SendTransmitter(MULTICAST_ADDRESS, PORT, messageList);
         transmitter.start();
+    }
+
+    // Method to get ACKs for a specific message type
+    public Set<String> getAcksForMessageType(String messageType) {
+        return ackMap.getOrDefault(messageType, Collections.emptySet());
     }
 }
