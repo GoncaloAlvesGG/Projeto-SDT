@@ -3,17 +3,23 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
 
 public class ElementLider extends Element implements LeaderInterface, Serializable {
-    private final Set<String> receivedAcks = new HashSet<>();
     private final Set<String> elementos = new HashSet<>();
     private final MessageList messageList = new MessageList();
     private FileManager fileManager = new FileManager();
     private final Map<String, Long> lastResponseTime = new HashMap<>();
     private static final long TIMEOUT = 15000; // 15 seconds
 
-    // Map to store ACKs received for each message type
+    // Map to store ACKs received for each heartbeat ID
     private final Map<String, Set<String>> ackMap = new HashMap<>();
 
     public ElementLider() throws RemoteException {
@@ -31,21 +37,19 @@ public class ElementLider extends Element implements LeaderInterface, Serializab
     @Override
     public void start() {
         new Thread(() -> {
-            // Cria a mensagem de heartbeat
-            Message heartbeatMessage = new Message("HEARTBEAT");
-
-            // Envia o heartbeat diretamente sem armazenar na lista
             while (true) {
                 try {
-                    // Cria uma nova lista temporária de mensagens a cada iteração
-                    MessageList tempMessageList = new MessageList();
-                    tempMessageList.addMessage(heartbeatMessage);
+                    // Cria um ID único para o heartbeat
+                    String heartbeatId = UUID.randomUUID().toString();
+                    Message heartbeatMessage = new Message("HEARTBEAT", heartbeatId);
 
                     // Envia o heartbeat por multicast
+                    MessageList tempMessageList = new MessageList();
+                    tempMessageList.addMessage(heartbeatMessage);
                     SendTransmitter transmitter = new SendTransmitter(MULTICAST_ADDRESS, PORT, tempMessageList);
                     transmitter.start();
 
-                    System.out.println("Heartbeat enviado para os membros.");
+                    System.out.println("Heartbeat enviado para os membros com ID: " + heartbeatId);
 
                     // Remove elementos que não responderam dentro do tempo aceitável
                     checkTimeouts();
@@ -80,21 +84,13 @@ public class ElementLider extends Element implements LeaderInterface, Serializab
         // Store the ACK UUID in the ackMap
         ackMap.computeIfAbsent(messageType, k -> new HashSet<>()).add(uuid);
 
-        switch (messageType) {
-            case "HEARTBEAT":
-                // Lógica específica para HEARTBEAT
-                System.out.println("Heartbeat ACK recebido de " + uuid);
-                break;
-            case "COMMIT":
-                receivedAcks.add(uuid);
-                if (receivedAcks.size() > elementos.size() / 2) {
-                    sendCommit();
-                    receivedAcks.clear();
-                }
-                break;
-            // Adicione outros casos conforme necessário
-            default:
-                System.out.println("Tipo de mensagem desconhecido: " + messageType);
+        if (messageType.startsWith("HEARTBEAT")) {
+            String heartbeatId = messageType.split(":")[1];
+            ackMap.computeIfAbsent(heartbeatId, k -> new HashSet<>()).add(uuid);
+            if (ackMap.get(heartbeatId).size() > elementos.size() / 2) {
+                sendCommit();
+
+            }
         }
     }
 

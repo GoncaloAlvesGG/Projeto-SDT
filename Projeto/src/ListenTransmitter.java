@@ -1,4 +1,5 @@
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
@@ -7,6 +8,7 @@ import java.net.MulticastSocket;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+
 
 public class ListenTransmitter extends Thread {
     private final String multicastAddress;
@@ -35,23 +37,12 @@ public class ListenTransmitter extends Thread {
                 Message receivedMessage = deserializeMessage(packet.getData(), packet.getLength());
                 System.out.println("Mensagem recebida: " + receivedMessage.getType());
 
-                if (receivedMessage.getType().equals("FILE")) {
-                    tempFile = receivedMessage.getFile();
-                    String uuid = java.util.UUID.randomUUID().toString();
+                if (receivedMessage.getType().startsWith("HEARTBEAT")) {
+                    String heartbeatId = (String) receivedMessage.getFile();
+                    System.out.println("Recebi um heartbeat com ID: " + heartbeatId);
                     try {
                         LeaderInterface leader = (LeaderInterface) Naming.lookup("rmi://localhost/Leader");
-                        leader.sendAck(uuid, "COMMIT");
-                        System.out.println("ACK enviado via RMI: " + uuid);
-                    } catch (NotBoundException | RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                if (receivedMessage.getType().equals("HEARTBEAT")) {
-                    System.out.println("Recebi um heartbeat!");
-                    try {
-                        LeaderInterface leader = (LeaderInterface) Naming.lookup("rmi://localhost/Leader");
-                        leader.sendAck(node.getUUID(), "HEARTBEAT");
+                        leader.sendAck(node.getUUID(), "HEARTBEAT:" + heartbeatId);
                     } catch (NotBoundException | RemoteException e) {
                         e.printStackTrace();
                     }

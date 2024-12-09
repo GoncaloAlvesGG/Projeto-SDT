@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.io.Serializable;
 
 public class Message implements Serializable {
     private String type; // Tipo da mensagem, por exemplo, "file" ou "commit"
@@ -25,11 +26,11 @@ public class Message implements Serializable {
         this.type = type;
     }
 
-    public File getFile() {
-        return (File) file;
+    public Object getFile() {
+        return file;
     }
 
-    public void setFile(File file) {
+    public void setFile(Object file) {
         this.file = file;
     }
 
